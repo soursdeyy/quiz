@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timed Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to bottom right, #0f3d57, #a7cfc7);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+      display: none;
+    }
+    .active { display: block; }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+    .timer {
+      font-size: 18px;
+      color: #ff5722;
+      margin-bottom: 20px;
+    }
+    .submit-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      background: #007bff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 20px;
+    }
+    .submit-btn:hover {
+      background-color: #0056b3;
+    }
+    .question-block {
+      text-align: left;
+      margin-top: 20px;
+    }
+    .question-block h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    label:hover {
+      background-color: #dcecfb;
+      border: 1px solid #007bff;
+    }
+    input[type="radio"] {
+      display: none;
+    }
+    .selected {
+      background-color: #007bff !important;
+      color: white;
+      border: 1px solid #0056b3;
+    }
+    .result {
+      font-size: 24px;
+      font-weight: 600;
+      color: green;
+      margin: 20px 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Welcome Page -->
+  <div id="welcome" class="container active">
+    <h1>🎉 Welcome to the Simple Quiz!</h1>
+    <p class="timer">⏳ You will get 10 seconds per question.</p>
+    <button class="submit-btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Page -->
+  <div id="quiz" class="container">
+    <h1>🌟 Simple Quiz</h1>
+    <p class="timer" id="countdown">Time left: 10s</p>
+    <form id="quizForm">
+      <div id="question-container" class="question-block"></div>
+      <button type="button" class="submit-btn" onclick="nextQuestion()">Next</button>
+    </form>
+  </div>
+
+  <!-- Thank You Page -->
+  <div id="thankyou" class="container">
+    <h1>✅ Thank You!</h1>
+    <p>We have received your answers. Great job! 🎉</p>
+    <p id="scoreText" class="result"></p>
+    <button class="submit-btn" onclick="goBack()">Go Back to Start</button>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const questions = [
+      {
+        question: "What is the capital of Cambodia?",
+        options: ["Paris", "Bangkok", "Manila", "Phnom Penh"],
+        answer: "Phnom Penh"
+      },
+      {
+        question: "Which planet is known as the Red Planet?",
+        options: ["Venus", "Jupiter", "Mars", "Saturn"],
+        answer: "Mars"
+      },
+      {
+        question: "Who wrote “Romeo and Juliet”?",
+        options: ["Charles Dickens", "Jane Austen", "William Shakespeare", "Leo Tolstoy"],
+        answer: "William Shakespeare"
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 10;
+
+    function startQuiz() {
+      document.getElementById('welcome').classList.remove('active');
+      document.getElementById('quiz').classList.add('active');
+      showQuestion();
+      startTimer();
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      const container = document.getElementById('question-container');
+      container.innerHTML = `<h3>${currentQuestion + 1}. ${q.question}</h3>`;
+      q.options.forEach(opt => {
+        const optionId = `opt_${opt.replace(/\s+/g, '')}`;
+        container.innerHTML += `
+          <label for="${optionId}">
+            <input type="radio" id="${optionId}" name="q${currentQuestion}" value="${opt}" onclick="highlightSelected(this)">
+            ${opt}
+          </label>
+        `;
+      });
+    }
+
+    function highlightSelected(inputEl) {
+      const labels = document.querySelectorAll(`#question-container label`);
+      labels.forEach(label => label.classList.remove('selected'));
+      inputEl.parentElement.classList.add('selected');
+    }
+
+    function startTimer() {
+      timeLeft = 10;
+      document.getElementById('countdown').textContent = `Time left: ${timeLeft}s`;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('countdown').textContent = `Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextQuestion();
+        }
+      }, 1000);
+    }
+
+    function nextQuestion() {
+      clearInterval(timer);
+      const selected = document.querySelector(`input[name="q${currentQuestion}"]:checked`);
+      if (selected && selected.value === questions[currentQuestion].answer) {
+        score++;
+      }
+
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+        startTimer();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById('quiz').classList.remove('active');
+      document.getElementById('thankyou').classList.add('active');
+      document.getElementById('scoreText').textContent = `You got ${score} out of ${questions.length} correct! 🌟`;
+    }
+
+    function goBack() {
+      document.getElementById('thankyou').classList.remove('active');
+      document.getElementById('welcome').classList.add('active');
+      currentQuestion = 0;
+      score = 0;
+    }
+  </script>
+</body>
+</html>
+
